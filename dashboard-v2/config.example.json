@@ -1,0 +1,17 @@
+{
+  "host": "127.0.0.1",
+  "port": 8080,
+  "latitude": null,
+  "longitude": null,
+  "location": "SET LOCATION",
+  "range_nm": 50,
+  "readsb_path": "/run/readsb/aircraft.json",
+  "readsb_url": "",
+  "rss": [
+    {
+      "name": "AP via Google News",
+      "url": "https://news.google.com/rss/search?q=site%3Aapnews.com+when%3A2d&hl=en-US&gl=US&ceid=US%3Aen"
+    }
+  ],
+  "markets_path": ""
+}

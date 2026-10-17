@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WOPR Situation Monitor</title><link rel="stylesheet" href="style.css"></head>
+<body><main id="dashboard">
+<header><h1>SITUATION MONITOR</h1><time id="clock"></time><span id="location">WOPR</span><span id="connection" class="green">CONNECTING</span></header>
+<section id="radar" class="panel"><h2>ADS-B RADAR <span id="contacts">WAITING</span></h2><div class="radarSweep" aria-hidden="true"></div><canvas width="340" height="326" aria-label="Live nearby aircraft radar"></canvas><footer id="radarInfo">WAITING FOR READSB</footer></section>
+<section id="aircraft" class="panel"><h2>AIRCRAFT <span>NEAREST</span></h2><table><thead><tr><th>CALLSIGN</th><th>ALT ft (m)</th><th>kt (km/h)</th><th>NM (km)</th></tr></thead><tbody id="planes"></tbody></table><p id="airMessage" class="message">Connecting to receiver…</p></section>
+<section id="weather" class="panel"><h2>WEATHER <span id="weatherState">WAIT</span></h2><div id="weatherBody" class="message">Set your coordinates<br>in config.json</div><div id="alertStatus">NWS · CHECKING</div><a class="credit" href="https://open-meteo.com/" target="_blank" rel="noopener">Weather: Open-Meteo</a></section>
+<section id="news" class="panel"><h2>NEWS WIRE <span id="newsState">RSS · WAITING</span></h2><div id="alertBanner" role="status" aria-live="polite" hidden></div><div id="headlines" class="message">Fetching real RSS headlines…</div></section>
+<section id="markets" class="panel"><h2>COLLEGE FOOTBALL <span id="footballState">TOP 25 · ESPN</span></h2><div id="marketBody">LOCAL SITUATION AWARENESS <span class="muted"> / WOPR</span></div></section>
+<section id="status" class="panel"><h2>SYSTEM STATUS</h2><div id="lights"><span id="adsbLight">● ADS-B</span><span id="wxLight">● WX</span><span id="rssLight">● RSS</span><span id="cpu">PI —</span></div></section>
+</main><script src="app.js"></script></body></html>

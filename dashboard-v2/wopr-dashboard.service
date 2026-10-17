@@ -1,0 +1,19 @@
+[Unit]
+Description=WOPR Situation Monitor
+After=network-online.target readsb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/wopr-situation-monitor/dashboard-v2
+ExecStart=/usr/bin/python3 /home/pi/wopr-situation-monitor/dashboard-v2/server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

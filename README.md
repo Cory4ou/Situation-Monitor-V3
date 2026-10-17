@@ -1,5 +1,21 @@
 # W.O.P.R. Situation Monitor
 
+## New: Dashboard v2.0.0
+
+A clean neon dashboard for the Raspberry Pi Zero 2 W at **800×480**, now running on the WOPR display. Live ADS-B radar, fading aircraft trails, weather and local NWS alerts, AP headlines, and scrolling weekend Top 25 college-football scores with an OU spotlight. No CRT effects.
+
+![WOPR Dashboard v2 running on the Pi](screenshots/dashboard-v2.png)
+
+**[Dashboard v2 source and setup instructions](dashboard-v2/README.md)** · [Version](dashboard-v2/VERSION)
+
+The radar covers a 50 NM (93 km) radius with decorative expanded-center spacing to keep nearby aircraft readable. Source configuration is supplied as an example; set your own receiver location and readsb connection.
+
+The original rotating Pygame display remains below and its source is preserved as `SituationMonitor_v2.py`. Despite that older filename, the new browser dashboard lives separately in `dashboard-v2/`.
+
+---
+
+## Original rotating display
+
 An always-on, 800×480 Raspberry Pi information display inspired by the WOPR command center from *WarGames*. It combines a local ADS-B receiver with weather, news, markets, orbital passes, space weather, daily statistics, and SEC football in a readable amber-on-black interface.
 
 The monitor is designed as a display piece first: large text, automatic page rotation, fullscreen operation, a hidden cursor, and graceful failure when an internet feed is unavailable.
@@ -116,3 +132,4 @@ These include unique aircraft, recognized military aircraft, peak message rate, 
 This is intentionally a single-file application. At its present size that makes deployment and recovery straightforward. If substantially more feeds or screens are added later, the data sources and drawing code could be split into separate modules.
 
 The interface is inspired by fictional 1980s command terminals; it is not affiliated with the creators or rights holders of *WarGames*.
+
