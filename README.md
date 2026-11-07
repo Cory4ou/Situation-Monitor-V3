@@ -1,67 +1,51 @@
-# W.O.P.R. Situation Monitor
+# Situation Monitor v3.0
 
-## New: Dashboard v2.0.0
+An always-on, 800 × 480 Raspberry Pi information display built for readability at approximately 10 ft (3 m). Version 3 restores the original rotating-screen format with a true-black background, large text, and a neon cyan, violet, pink, green, and white palette.
 
-A clean neon dashboard for the Raspberry Pi Zero 2 W at **800×480**, now running on the WOPR display. Live ADS-B radar, fading aircraft trails, weather and local NWS alerts, AP headlines, and scrolling weekend Top 25 college-football scores with an OU spotlight. No CRT effects.
+It combines a local ADS-B receiver with aircraft tracking, conservative military-aircraft identification, a five-day forecast, current headlines and markets, and an OU-first Top 25 college-football scoreboard.
 
-![WOPR Dashboard v2 running on the Pi](screenshots/dashboard-v2.png)
-
-**[Dashboard v2 source and setup instructions](dashboard-v2/README.md)** · [Version](dashboard-v2/VERSION)
-
-The radar covers a 50 NM (93 km) radius with decorative expanded-center spacing to keep nearby aircraft readable. Source configuration is supplied as an example; set your own receiver location and readsb connection.
-
-The original rotating Pygame display remains below and its source is preserved as `SituationMonitor_v2.py`. Despite that older filename, the new browser dashboard lives separately in `dashboard-v2/`.
-
----
-
-## Original rotating display
-
-An always-on, 800×480 Raspberry Pi information display inspired by the WOPR command center from *WarGames*. It combines a local ADS-B receiver with weather, news, markets, orbital passes, space weather, daily statistics, and SEC football in a readable amber-on-black interface.
-
-The monitor is designed as a display piece first: large text, automatic page rotation, fullscreen operation, a hidden cursor, and graceful failure when an internet feed is unavailable.
-
-## Preview
-
-The following clean presentation images were reconstructed from photographs of
-the working 800×480 display. They represent the real layouts and data, but are
-not raw framebuffer captures.
-
-![Strategic Status](screenshots/status.png)
-
-![Airborne Tracking](screenshots/radar.png)
-
-![SPACE WATCH](space-watch-live.jpg)
+Despite the historical filename, `SituationMonitor_v2.py` is the current **v3.0** program. The filename is retained so existing Pi launchers continue to work.
 
 ## Screens
 
-1. **Strategic Status** — system readiness, local time, uptime, live 50 NM aircraft count, activity level, 1090 MHz rate, and weather status.
-2. **Airborne Tracking** — fixed 50 NM ADS-B radar with two-minute trails, military-aircraft recognition, contact statistics, and the nearest current track.
-3. **Military Identification** — publicly available aircraft type information and a wireframe illustration. This page joins rotation while a recognized military contact is present.
-4. **Signal Activity** — readsb status, recently heard aircraft, message totals, and a live 60-second oscilloscope trace.
-5. **Atmospheric Analysis** — current local weather, wind, humidity, pressure, visibility, sunrise/sunset, severe-alert status, Moon phase, geomagnetic Kp, and solar radio flux.
-6. **Strategic Intelligence** — current U.S., technology, space, and defense headlines with DJIA, S&P 500, and NASDAQ movement.
-7. **SPACE WATCH** — an Earth view centered on the configured home location (Oklahoma by default), approximate daylight/night shading, ISS and Tiangong ground tracks, and a large next-nearby-pass card. Positions update every five minutes. Pass predictions are not promises of naked-eye visibility. Hubble is no longer tracked.
-8. **Regional Conflict** — SEC football times, scores, and television coverage. This page joins automatic rotation only when cached schedule data contains a game dated today in the local time zone; F8 always opens it manually. Yesterday's cached games cannot keep it active. The feed tries a second ESPN endpoint and reports unavailable data rather than presenting a failed request as an empty schedule.
+![Strategic Status](screenshots/v3-status.png)
 
-After a complete rotation, a short WOPR pattern-analysis sequence appears before the cycle begins again.
+![Airborne Tracking](screenshots/v3-radar.png)
+
+![Five-Day Forecast](screenshots/v3-five-day.png)
+
+![Strategic Intelligence](screenshots/v3-intelligence.png)
+
+![Top 25 and OU Football](screenshots/v3-football.png)
+
+The screenshots use representative data to demonstrate the layouts. Live installations use their configured location, receiver, feeds, and current scores.
+
+1. **Strategic Status** — local time, uptime, live aircraft count, activity meter, 1090 MHz rate, and feed readiness.
+2. **Airborne Tracking** — fixed 50 NM (93 km) ADS-B radar with two-minute trails, military recognition, contact totals, and nearest-track information.
+3. **Military Identification** — a large public-reference aircraft profile and wireframe. This page joins rotation only while a recognized military contact is present.
+4. **1090 Activity** — recent aircraft, message totals, and a live 60-second activity trace.
+5. **Five-Day Outlook** — daily high, low, condition, and maximum precipitation probability using a no-key forecast feed.
+6. **Strategic Intelligence** — two large current headlines plus DJIA, S&P 500, and NASDAQ movement.
+7. **College Football** — OU appears first whether ranked or not, followed by games involving Top 25 teams. Crowded game days page internally every seven seconds. The screen joins automatic rotation only on relevant game days.
+
+Automatic page rotation is 20 seconds. After a complete rotation, a short pattern-analysis sequence appears before the cycle begins again.
 
 ## Requirements
 
-- Raspberry Pi with an 800×480 display
+- Raspberry Pi with an 800 × 480 display
 - Python 3
 - Pygame
-- Skyfield
 - `readsb` providing BaseStation/SBS messages on TCP port 30003
-- Internet access for weather, news, markets, scores, orbital elements, and space weather
+- Internet access for weather, headlines, markets, aircraft metadata, and scores
 
-Install the Python packages supplied by Raspberry Pi OS:
+Install Pygame from Raspberry Pi OS:
 
 ```bash
 sudo apt update
-sudo apt install python3-pygame python3-skyfield
+sudo apt install python3-pygame
 ```
 
-The ADS-B receiver and `readsb` must be installed and configured separately. The monitor expects it at `127.0.0.1:30003`.
+The ADS-B receiver and `readsb` must be installed separately. By default, the monitor expects the SBS stream at `127.0.0.1:30003`.
 
 ## Configuration
 
@@ -69,14 +53,13 @@ Configuration values are near the top of `SituationMonitor_v2.py`:
 
 ```python
 WIDTH, HEIGHT = 800, 480
-PAGE_SECONDS = 15
+PAGE_SECONDS = 20
 READSB_HOST, READSB_PORT = "127.0.0.1", 30003
 HOME_LAT, HOME_LON = 35.0000, -97.0000
-LOCATION_NAME = "YOUR LOCATION"
 RADAR_RANGE_NM = 50
 ```
 
-Set `HOME_LAT`, `HOME_LON`, and `LOCATION_NAME` for the installation location before running the monitor.
+Replace the example coordinates with the installation location. Do not publish precise private coordinates unless that is intentional.
 
 ## Running
 
@@ -84,7 +67,13 @@ Set `HOME_LAT`, `HOME_LON`, and `LOCATION_NAME` for the installation location be
 python3 SituationMonitor_v2.py
 ```
 
-The application opens fullscreen and hides the mouse cursor. Press Escape to exit during development.
+For Raspberry Pi OS using Labwc, an autostart entry can launch it after login:
+
+```text
+/usr/bin/python3 /home/pi/SituationMonitor_v2.py &
+```
+
+The program opens fullscreen and hides the cursor.
 
 ## Controls
 
@@ -92,44 +81,31 @@ The application opens fullscreen and hides the mouse cursor. Press Escape to exi
 | --- | --- |
 | F1 | Strategic Status |
 | F2 | Airborne Tracking |
-| F3 | Military Identification |
-| F4 | Signal Activity |
-| F5 | Weather + Space Weather |
+| F3 | Military Identification, when available |
+| F4 | 1090 Activity |
+| F5 | Five-Day Outlook |
 | F6 | Strategic Intelligence |
-| F7 | SPACE WATCH |
-| F8 | SEC Football |
+| F7 | Top 25 + OU Football |
 | F12 | Save a PNG screenshot |
-| Escape | Exit |
+| Escape | Exit during development |
 
+## Data sources and failure handling
 
-## Data sources
-
-The monitor uses lightweight public feeds and does not require API keys:
-
-- Local `readsb` BaseStation/SBS stream for ADS-B
-- U.S. National Weather Service for conditions, forecasts, and alerts
-- NOAA Space Weather Prediction Center for Kp and solar flux
-- Public RSS sources for headlines
+- Local `readsb` SBS stream and JSON data for ADS-B
+- U.S. National Weather Service for observations and alerts
+- Open-Meteo for the five-day forecast and model fallback
+- Public RSS feeds for headlines
 - Yahoo Finance with a Stooq fallback for market movement
-- ESPN's public scoreboard data for college football
-- CelesTrak and SatNOGS for station orbital elements, with a last-good local cache
+- ESPN scoreboard data for current rankings, schedules, scores, and television coverage
 
-Every network request runs outside the display loop with a timeout. Failed feeds retain previous data where possible and report an unavailable or stale state instead of stopping the interface.
+Network work runs in background threads with timeouts. Failed feeds retain last-known data where possible and report stale or unavailable status rather than freezing the display.
 
-## Daily archive
+## Previous dashboard
 
-The program keeps compact daily ADS-B summaries in:
-
-```text
-~/SituationMonitor_archive/
-```
-
-These include unique aircraft, recognized military aircraft, peak message rate, closest contact, and total messages. Individual raw ADS-B messages are not archived.
-
+The October browser dashboard remains preserved in [`dashboard-v2/`](dashboard-v2/README.md). It is no longer the primary version because its dense single-screen layout was difficult to read at room distance.
 
 ## Notes
 
-This is intentionally a single-file application. At its present size that makes deployment and recovery straightforward. If substantially more feeds or screens are added later, the data sources and drawing code could be split into separate modules.
+The military identification page uses publicly available ADS-B information and conservative heuristics. An unknown type receives a generic profile instead of a fabricated identification.
 
-The interface is inspired by fictional 1980s command terminals; it is not affiliated with the creators or rights holders of *WarGames*.
-
+The interface is inspired by retro command terminals but is not affiliated with the creators or rights holders of *WarGames*.

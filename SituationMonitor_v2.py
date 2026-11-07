@@ -20,7 +20,7 @@ import pygame
 
 WIDTH, HEIGHT = 800, 480
 FPS = 30
-PAGE_SECONDS = 15
+PAGE_SECONDS = 20
 READSB_HOST, READSB_PORT = "127.0.0.1", 30003
 READSB_JSON_PATHS = (
     Path("/run/readsb/aircraft.json"),
@@ -41,7 +41,7 @@ ATTRACT_LINE_PAUSE = 0.20
 ATTRACT_HOLD_SECONDS = 1.20
 ATTRACT_MESSAGES = (
     "ESTABLISHING STRATEGIC DATA LINKS",
-    "CORRELATING AIR / ORBITAL TRACKS",
+    "CORRELATING AIR / SIGNAL TRACKS",
     "EVALUATING ATMOSPHERIC CONDITIONS",
     "SEARCHING FOR PATTERNS",
     "NO IMMEDIATE THREATS DETECTED",
@@ -49,13 +49,16 @@ ATTRACT_MESSAGES = (
 ARCHIVE_DIR = Path.home() / "SituationMonitor_archive"
 SCREENSHOT_REQUEST = ARCHIVE_DIR / "CAPTURE_SCREENSHOT"
 
-BLACK = (4, 3, 1)
-AMBER = (245, 156, 34)
-BRIGHT_AMBER = (255, 218, 112)
-DIM_AMBER = (139, 78, 16)
-VERY_DIM = (48, 27, 7)
-PANEL_FILL = (13, 8, 2)
-MILITARY_RED = (255, 75, 35)
+BLACK = (0, 0, 0)
+AMBER = (0, 229, 255)
+BRIGHT_AMBER = (235, 252, 255)
+DIM_AMBER = (137, 77, 255)
+VERY_DIM = (24, 25, 67)
+PANEL_FILL = (3, 3, 9)
+MILITARY_RED = (255, 45, 170)
+NEON_GREEN = (69, 255, 176)
+OU_CRIMSON = (132, 22, 23)
+OU_CREAM = (253, 249, 216)
 
 MILITARY_ICAO_RANGES = (
     (0xAE0000, 0xAEFFFF, "US MIL"),
@@ -132,6 +135,9 @@ FONT_MED = monitor_font(28, bold=True)
 FONT_SMALL = monitor_font(21)
 FONT_TINY = monitor_font(16)
 FONT_SPACE = monitor_font(24, bold=True)
+FONT_FORECAST = monitor_font(42, bold=True)
+FONT_FORECAST_LOW = monitor_font(27, bold=True)
+FONT_NEWS = monitor_font(34, bold=True)
 
 
 def text(message, x, y, font=FONT_SMALL, color=AMBER):
@@ -143,13 +149,13 @@ def line(color, start, end, width=1):
 
 
 def panel(rect, corner=10):
-    """Draw a recessed WOPR-era instrument bay behind page data."""
+    """Draw a recessed retro-future instrument bay behind page data."""
     x, y, w, h = rect
     pygame.draw.rect(screen, PANEL_FILL, rect)
     pygame.draw.rect(screen, VERY_DIM, rect, 1)
     # Clipped corners and registration marks make this feel built, not styled.
-    line(DIM_AMBER, (x, y), (x + corner, y), 2)
-    line(DIM_AMBER, (x, y), (x, y + corner), 2)
+    line(MILITARY_RED, (x, y), (x + corner, y), 2)
+    line(MILITARY_RED, (x, y), (x, y + corner), 2)
     line(DIM_AMBER, (x + w - corner, y + h), (x + w, y + h), 2)
     line(DIM_AMBER, (x + w, y + h - corner), (x + w, y + h), 2)
 
@@ -161,16 +167,18 @@ def header(title, page):
     for y in range(88, 445, 40):
         line(VERY_DIM, (15, y), (785, y))
     pygame.draw.rect(screen, VERY_DIM, (12, 7, 776, 76), 1)
-    pygame.draw.rect(screen, DIM_AMBER, (17, 11, 7, 42))
-    text("W.O.P.R. // SITUATION MONITOR", 32, 9, FONT_MED, BRIGHT_AMBER)
+    pygame.draw.rect(screen, MILITARY_RED, (17, 11, 7, 42))
+    text("SITUATION MONITOR", 32, 9, FONT_MED, BRIGHT_AMBER)
+    text("v3.0", 350, 16, FONT_TINY, MILITARY_RED)
     text(f"{page:02d}  {title}", 32, 39, FONT_SMALL, AMBER)
-    text("F1 STATUS F2 AIR F3 MIL-ID F4 1090 F5 WX F6 INTEL F7 ORBIT F8 SEC",
+    text("F1 STATUS  F2 AIR  F3 MIL-ID  F4 1090  F5 5-DAY  F6 INTEL  F7 CFB",
          20, 63, FONT_TINY, DIM_AMBER)
     pygame.draw.circle(screen, BRIGHT_AMBER, (684, 22), 4)
     text("ONLINE", 696, 13, FONT_TINY, BRIGHT_AMBER)
     text(f"SYS-{page:02d}  {int(time.time()) & 0xFFFF:04X}",
          663, 41, FONT_TINY, DIM_AMBER)
     line(AMBER, (15, 84), (785, 84), 2)
+    line(MILITARY_RED, (15, 84), (205, 84), 2)
 
 
 def bottom(status):
@@ -564,15 +572,25 @@ class WeatherFeed:
             self.fetching = False
 
     def fetch_optional_weather(self):
-        result = {"sunrise": None, "sunset": None, "alert": None}
+        result = {"sunrise": None, "sunset": None, "alert": None, "daily": []}
         try:
             sun = self.get_json(
                 "https://api.open-meteo.com/v1/forecast"
                 f"?latitude={HOME_LAT:.4f}&longitude={HOME_LON:.4f}"
-                "&daily=sunrise,sunset&timezone=auto&forecast_days=1"
+                "&daily=sunrise,sunset,weather_code,temperature_2m_max,"
+                "temperature_2m_min,precipitation_probability_max"
+                "&temperature_unit=fahrenheit&timezone=auto&forecast_days=5"
             )["daily"]
             result["sunrise"] = sun["sunrise"][0][11:16]
             result["sunset"] = sun["sunset"][0][11:16]
+            for index, date_text in enumerate(sun.get("time", [])[:5]):
+                result["daily"].append({
+                    "date": date_text,
+                    "code": sun.get("weather_code", [None] * 5)[index],
+                    "high": round(sun["temperature_2m_max"][index]),
+                    "low": round(sun["temperature_2m_min"][index]),
+                    "rain": round((sun.get("precipitation_probability_max") or [0] * 5)[index] or 0),
+                })
         except (OSError, ValueError, KeyError, IndexError, json.JSONDecodeError):
             pass
         try:
@@ -696,24 +714,14 @@ intelligence = IntelligenceFeed()
 
 
 class SECScoreFeed:
-    """Fetch the SEC football scoreboard without blocking the display."""
-
-    SEC_TEAMS = {
-        "ALA", "ARK", "AUB", "FLA", "UGA", "UK", "LSU", "MISS",
-        "MSST", "MIZ", "OU", "SC", "TENN", "TEX", "TA&M", "VAN",
-    }
-    SEC_LOCATIONS = {
-        "Alabama", "Arkansas", "Auburn", "Florida", "Georgia", "Kentucky",
-        "LSU", "Mississippi State", "Missouri", "Oklahoma", "Ole Miss",
-        "South Carolina", "Tennessee", "Texas", "Texas A&M", "Vanderbilt",
-    }
+    """Fetch OU and Top 25 football games without blocking the display."""
 
     def __init__(self):
         self.games = []
         self.updated = 0
         self.fetching = False
         self.next_fetch = 0
-        self.status = "LOADING SEC SCOREBOARD"
+        self.status = "LOADING TOP 25 SCOREBOARD"
 
     def update(self):
         if not self.fetching and time.time() >= self.next_fetch:
@@ -770,12 +778,16 @@ class SECScoreFeed:
                         "name": team.get("abbreviation") or team.get("shortDisplayName") or "TBD",
                         "location": team.get("location") or team.get("shortDisplayName") or "",
                         "score": competitor.get("score", "0"),
+                        "rank": (competitor.get("curatedRank") or {}).get("current"),
                     }
                 if "home" not in teams or "away" not in teams:
                     continue
-                abbreviations = {teams["home"]["name"], teams["away"]["name"]}
-                locations = {teams["home"]["location"], teams["away"]["location"]}
-                if not (abbreviations & self.SEC_TEAMS or locations & self.SEC_LOCATIONS):
+                ou_game = any(team["name"] == "OU" or team["location"] == "Oklahoma"
+                              for team in teams.values())
+                ranked_game = any(isinstance(team.get("rank"), int)
+                                  and 1 <= team["rank"] <= 25
+                                  for team in teams.values())
+                if not (ou_game or ranked_game):
                     continue
                 start = datetime.fromisoformat(event["date"].replace("Z", "+00:00")).astimezone()
                 status = event.get("status", {}).get("type", {})
@@ -793,15 +805,24 @@ class SECScoreFeed:
                     "today": start.date() == today,
                 })
             priority = {"in": 0, "pre": 1, "post": 2}
-            games.sort(key=lambda game: (priority.get(game["state"], 3), game["start"]))
+            def game_order(game):
+                teams = (game["away"], game["home"])
+                ou = any(team["name"] == "OU" or team["location"] == "Oklahoma"
+                         for team in teams)
+                best_rank = min((team["rank"] for team in teams
+                                 if isinstance(team.get("rank"), int)
+                                 and 1 <= team["rank"] <= 25), default=99)
+                return (0 if ou else 1, priority.get(game["state"], 3),
+                        best_rank, game["start"])
+            games.sort(key=game_order)
             self.games = games
             self.updated = time.time()
-            self.status = "LIVE ESPN / SEC TEAMS" if games else "NO SEC GAMES FOUND TODAY"
+            self.status = "LIVE ESPN / TOP 25 + OU" if games else "NO TOP 25 OR OU GAMES TODAY"
             self.next_fetch = time.time() + (30 if any(
                 game["state"] == "in" for game in games
             ) else 300)
         except (OSError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError):
-            self.status = "SCORE FEED OFFLINE - USING LAST DATA" if self.games else "SEC SCORE FEED UNAVAILABLE"
+            self.status = "SCORE FEED OFFLINE - USING LAST DATA" if self.games else "TOP 25 SCORE FEED UNAVAILABLE"
             self.next_fetch = time.time() + 60
         finally:
             self.fetching = False
@@ -1322,7 +1343,8 @@ def draw_status():
     positioned = contacts_in_range()
     count = len(positioned)
     activity = "LOW" if count < 5 else "MODERATE" if count < 12 else "HIGH"
-    text("NOMINAL" if online else "STANDBY", 25, 105, FONT_BIG, BRIGHT_AMBER)
+    text("NOMINAL" if online else "STANDBY", 25, 105, FONT_BIG,
+         NEON_GREEN if online else MILITARY_RED)
     text("LEVEL 1", 650, 110, FONT_MED)
     text("LOCAL TIME", 25, 160, FONT_SMALL, DIM_AMBER)
     text(datetime.now().strftime("%H:%M:%S"), 25, 180, FONT_BIG)
@@ -1396,7 +1418,8 @@ def draw_radar():
                 text(label, int(x) + 6, int(y) - 7, FONT_TINY, BRIGHT_AMBER)
     text("1090 MHz / ADS-B", 490, 105, FONT_MED)
     text("READSB FEED", 490, 145, FONT_SMALL, DIM_AMBER)
-    text("ONLINE" if feed.connected else "RECONNECTING", 490, 165, FONT_MED)
+    text("ONLINE" if feed.connected else "RECONNECTING", 490, 165, FONT_MED,
+         NEON_GREEN if feed.connected else MILITARY_RED)
     text("CONTACTS", 490, 215, FONT_SMALL, DIM_AMBER)
     text(len(positioned), 490, 235, FONT_BIG)
     text(f"MIL CONFIRMED  {military_count}", 620, 245, FONT_TINY,
@@ -1481,43 +1504,41 @@ def draw_activity():
     bottom("LIVE READSB MESSAGE ACTIVITY" if feed.connected else "RECONNECTING TO READSB")
 
 
+def weather_code_label(code):
+    if code == 0: return "CLEAR"
+    if code in (1, 2): return "PART CLOUD"
+    if code == 3: return "CLOUDY"
+    if code in (45, 48): return "FOG"
+    if code in (51, 53, 55, 56, 57): return "DRIZZLE"
+    if code in (61, 63, 65, 66, 67, 80, 81, 82): return "RAIN"
+    if code in (71, 73, 75, 77, 85, 86): return "SNOW"
+    if code in (95, 96, 99): return "STORMS"
+    return "--"
+
+
 def draw_weather():
-    header("ATMOSPHERIC ANALYSIS / LOCAL", 5)
-    panel((18, 96, 300, 278))
-    panel((323, 145, 220, 229))
-    panel((550, 145, 232, 229))
-    panel((18, 382, 764, 52))
-    data = weather.data
-    text("NORMAN, OK", 25, 105, FONT_BIG, BRIGHT_AMBER)
-    text("CURRENT CONDITIONS", 25, 160, FONT_SMALL, DIM_AMBER)
-    text(shown(data.get("temp"), " F"), 25, 178, FONT_TEMP, BRIGHT_AMBER)
-    text(data.get("conditions", "LOADING...")[:18], 25, 292, FONT_MED)
-    text("WIND", 330, 160, FONT_SMALL, DIM_AMBER)
-    text(f"{compass(data.get('wind_dir'))} {shown(data.get('wind'), ' MPH')}", 330, 185, FONT_MED)
-    text("HUMIDITY", 330, 235, FONT_SMALL, DIM_AMBER)
-    text(shown(data.get("humidity"), " %"), 330, 260, FONT_MED)
-    text("PRESSURE", 330, 305, FONT_SMALL, DIM_AMBER)
-    text(shown(data.get("pressure"), " IN", 2), 330, 330, FONT_MED)
-    text("VISIBILITY", 560, 160, FONT_SMALL, DIM_AMBER)
-    text(shown(data.get("visibility"), " MI", 1), 560, 185, FONT_MED)
-    text("SUNRISE / SUNSET", 560, 235, FONT_SMALL, DIM_AMBER)
-    text(f"{data.get('sunrise') or '--:--'} / {data.get('sunset') or '--:--'}", 560, 260, FONT_SMALL)
-    text("SEVERE ALERT", 560, 305, FONT_SMALL, DIM_AMBER)
-    alert = data.get("alert")
-    text((alert or "CHECKING...")[:24], 560, 330, FONT_SMALL,
-         MILITARY_RED if alert and alert != "NONE" else AMBER)
-    _, _, illumination, phase_name = moon_state()
-    kp = space_weather.data.get("kp")
-    flux = space_weather.data.get("flux")
-    text("LUNAR", 28, 387, FONT_TINY, DIM_AMBER)
-    text(f"{phase_name}  {illumination * 100:.0f}%", 28, 406, FONT_SMALL)
-    text("GEOMAGNETIC", 350, 387, FONT_TINY, DIM_AMBER)
-    text("KP --" if kp is None else f"KP {kp:.1f}", 350, 406, FONT_SMALL,
-         MILITARY_RED if kp is not None and kp >= 5 else AMBER)
-    text("SOLAR FLUX", 535, 387, FONT_TINY, DIM_AMBER)
-    text("-- SFU" if flux is None else f"{flux:.1f} SFU",
-         535, 406, FONT_SMALL)
-    bottom(weather.status + " / " + space_weather.status)
+    header("FIVE DAY OUTLOOK / NORMAN", 5)
+    daily = weather.data.get("daily", [])[:5]
+    if not daily:
+        panel((18, 104, 764, 318))
+        text("ACQUIRING FIVE DAY FORECAST", 58, 205, FONT_BIG, BRIGHT_AMBER)
+        text("LAST KNOWN WEATHER REMAINS AVAILABLE", 92, 275, FONT_MED, DIM_AMBER)
+        bottom(weather.status)
+        return
+    for index, day in enumerate(daily):
+        x = 18 + index * 153
+        panel((x, 101, 148, 323))
+        date = datetime.fromisoformat(day["date"])
+        text(date.strftime("%a").upper(), x + 12, 112, FONT_MED,
+             MILITARY_RED if index == 0 else BRIGHT_AMBER)
+        text(date.strftime("%b %d").upper(), x + 12, 146, FONT_TINY, DIM_AMBER)
+        text(f"{day['high']}°", x + 10, 187, FONT_FORECAST, BRIGHT_AMBER)
+        text(f"LOW {day['low']}°", x + 12, 247, FONT_FORECAST_LOW, AMBER)
+        text(weather_code_label(day.get("code")), x + 12, 304, FONT_TINY,
+             NEON_GREEN if day.get("code") == 0 else AMBER)
+        rain_color = MILITARY_RED if day.get("rain", 0) >= 50 else DIM_AMBER
+        text(f"RAIN {day.get('rain', 0)}%", x + 12, 356, FONT_SMALL, rain_color)
+    bottom(weather.status + " / OPEN-METEO 5-DAY MODEL")
 
 
 def draw_intelligence():
@@ -1527,22 +1548,22 @@ def draw_intelligence():
     headlines = intelligence.headlines
     if not headlines:
         text("AWAITING CURRENT HEADLINES...", 25, 120, FONT_MED, DIM_AMBER)
-    for row, (category, headline) in enumerate(headlines[:3]):
-        y = 105 + row * 94
-        text(f"{row + 1:02d}  {category}", 25, y, FONT_SMALL, DIM_AMBER)
-        wrapped = wrap_words(headline, 44)
-        text(wrapped[0][:44], 25, y + 25, FONT_MED, BRIGHT_AMBER)
+    for row, (category, headline) in enumerate(headlines[:2]):
+        y = 108 + row * 135
+        text(f"{row + 1:02d}  {category}", 25, y, FONT_SMALL, MILITARY_RED)
+        wrapped = wrap_words(headline, 36)
+        text(wrapped[0][:36], 25, y + 28, FONT_NEWS, BRIGHT_AMBER)
         if len(wrapped) > 1:
-            text(wrapped[1][:44], 25, y + 53, FONT_MED)
-        line(VERY_DIM, (25, y + 84), (775, y + 84))
-    text("MARKETS / PREVIOUS CLOSE", 25, 389, FONT_SMALL, DIM_AMBER)
+            text(wrapped[1][:36], 25, y + 69, FONT_NEWS, BRIGHT_AMBER)
+        line(VERY_DIM, (25, y + 122), (775, y + 122))
+    text("MARKETS / PREVIOUS CLOSE", 25, 389, FONT_SMALL, MILITARY_RED)
     x_positions = (25, 275, 540)
     for x, label in zip(x_positions, ("DJIA", "S&P 500", "NASDAQ")):
         change = intelligence.markets.get(label)
         value = "--" if change is None else f"{change:+.2f}%"
         direction = "--" if change is None else "UP" if change > 0 else "DOWN" if change < 0 else "FLAT"
         text(f"{label} {direction} {value}", x, 416, FONT_SMALL,
-             BRIGHT_AMBER if change is not None and change >= 0 else AMBER)
+             NEON_GREEN if change is not None and change >= 0 else MILITARY_RED)
     status = intelligence.status
     if intelligence.updated and time.time() - intelligence.updated > 3600:
         status = "STALE DATA - LAST SUCCESS " + datetime.fromtimestamp(intelligence.updated).strftime("%H:%M")
@@ -1740,24 +1761,35 @@ def draw_space():
 
 
 def draw_sec_scoreboard():
-    header("REGIONAL CONFLICT / SEC FOOTBALL", 8)
+    header("COLLEGE FOOTBALL / TOP 25 + OU", 7)
     panel((18, 96, 764, 322))
     today = datetime.now().astimezone().date()
-    games = [game for game in sec_scores.games
-             if game["start"].date() == today][:3]
+    all_games = [game for game in sec_scores.games if game["start"].date() == today]
+    page_count = max(1, math.ceil(len(all_games) / 3))
+    batch = int(max(0, time.monotonic() - page_changed_at) // 7) % page_count
+    games = all_games[batch * 3:batch * 3 + 3]
     if not games:
         unavailable = not sec_scores.updated or "OFFLINE" in sec_scores.status or "UNAVAILABLE" in sec_scores.status
-        text("SEC SCHEDULE UNAVAILABLE" if unavailable else "NO SEC GAMES SCHEDULED TODAY",
+        text("TOP 25 SCOREBOARD UNAVAILABLE" if unavailable else "NO TOP 25 OR OU GAMES TODAY",
              25, 135, FONT_MED, DIM_AMBER)
-        text("F8 MANUAL / NOT IN AUTO ROTATION", 25, 180, FONT_SMALL, DIM_AMBER)
+        text("F7 MANUAL / NOT IN AUTO ROTATION", 25, 180, FONT_SMALL, DIM_AMBER)
     for row, game in enumerate(games):
         y = 105 + row * 108
-        live_color = BRIGHT_AMBER if game["state"] == "in" else AMBER
+        ou_game = any(team["name"] == "OU" or team["location"] == "Oklahoma"
+                      for team in (game["away"], game["home"]))
+        live_color = OU_CREAM if ou_game else (BRIGHT_AMBER if game["state"] == "in" else AMBER)
+        if ou_game:
+            pygame.draw.rect(screen, OU_CRIMSON, (21, y - 5, 7, 78))
+            text("SOONER WATCH", 590, y + 72, FONT_TINY, OU_CREAM)
         away_score = game["away"]["score"] if game["state"] != "pre" else "--"
         home_score = game["home"]["score"] if game["state"] != "pre" else "--"
-        text(game["away"]["name"], 25, y, FONT_MED, live_color)
+        def team_label(team):
+            rank = team.get("rank")
+            prefix = f"#{rank} " if isinstance(rank, int) and 1 <= rank <= 25 else ""
+            return "OU SOONERS" if team["name"] == "OU" or team["location"] == "Oklahoma" else prefix + team["name"]
+        text(team_label(game["away"]), 25, y, FONT_MED, live_color)
         text(away_score, 310, y - 3, FONT_BIG, live_color)
-        text(game["home"]["name"], 25, y + 38, FONT_MED, live_color)
+        text(team_label(game["home"]), 25, y + 38, FONT_MED, live_color)
         text(home_score, 310, y + 35, FONT_BIG, live_color)
 
         if game["state"] == "pre":
@@ -1769,8 +1801,10 @@ def draw_sec_scoreboard():
         if game["network"]:
             text(game["network"][:25], 430, y + 43, FONT_SMALL, DIM_AMBER)
         line(VERY_DIM, (25, y + 91), (775, y + 91))
-    rotation_note = "SEC FOOTBALL ROTATION ACTIVE" if sec_scores.rotation_active else "F8 MANUAL / ROTATION STANDBY"
+    rotation_note = "TOP 25 SCOREBOARD ACTIVE" if sec_scores.rotation_active else "F7 MANUAL / ROTATION STANDBY"
     text(rotation_note, 25, 424, FONT_TINY, DIM_AMBER)
+    if page_count > 1:
+        text(f"PAGE {batch + 1}/{page_count} / 7 SEC", 590, 424, FONT_TINY, MILITARY_RED)
     bottom(sec_scores.status)
 
 
@@ -1825,11 +1859,10 @@ try:
                     screenshot_requested = True
                 elif event.key in (pygame.K_F1, pygame.K_F2, pygame.K_F3,
                                    pygame.K_F4, pygame.K_F5, pygame.K_F6,
-                                   pygame.K_F7, pygame.K_F8):
+                                   pygame.K_F7):
                     page = {pygame.K_F1: 1, pygame.K_F2: 2, pygame.K_F3: 3,
                             pygame.K_F4: 4, pygame.K_F5: 5,
-                            pygame.K_F6: 6, pygame.K_F7: 7,
-                            pygame.K_F8: 8}[event.key]
+                            pygame.K_F6: 6, pygame.K_F7: 7}[event.key]
                     if page == 3 and current_military_contact() is None:
                         page = 4
                     attract_until = 0
@@ -1839,9 +1872,9 @@ try:
             rotation_pages = [1, 2]
             if current_military_contact() is not None:
                 rotation_pages.append(3)
-            rotation_pages.extend((4, 5, 6, 7))
+            rotation_pages.extend((4, 5, 6))
             if sec_scores.rotation_active:
-                rotation_pages.append(8)
+                rotation_pages.append(7)
             try:
                 current_index = rotation_pages.index(page)
             except ValueError:
@@ -1860,8 +1893,8 @@ try:
         weather.update()
         intelligence.update()
         radar_trails.update()
-        satellites.update()
-        space_weather.update()
+        # Space feeds are intentionally dormant; the city-useful display no
+        # longer includes an orbital page.
         archive.update()
         sec_scores.update()
         aircraft_metadata.update()
@@ -1878,7 +1911,7 @@ try:
             drawers = (draw_status, draw_radar,
                        (lambda: draw_identification(military_contact)),
                        draw_activity, draw_weather, draw_intelligence,
-                       draw_space, draw_sec_scoreboard)
+                       draw_sec_scoreboard)
             drawers[page - 1]()
         crt_overlay(time.monotonic() - page_changed_at)
         if screenshot_requested:
