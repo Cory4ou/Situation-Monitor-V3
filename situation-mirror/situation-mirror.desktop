@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Situation Mirror
+Exec=/usr/bin/python3 /home/pi/mirror_client.py
+Terminal=false
+X-GNOME-Autostart-enabled=true

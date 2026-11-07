@@ -1,0 +1,2 @@
+/usr/bin/python3 /home/pi/SituationMonitor_v2.py &
+/usr/bin/python3 /home/pi/mirror_server.py >>/home/pi/mirror_server.log 2>&1 &

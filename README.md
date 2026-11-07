@@ -104,6 +104,10 @@ Network work runs in background threads with timeouts. Failed feeds retain last-
 
 The October browser dashboard remains preserved in [`dashboard-v2/`](dashboard-v2/README.md). It is no longer the primary version because its dense single-screen layout was difficult to read at room distance.
 
+## Situation Mirror
+
+[`situation-mirror/`](situation-mirror/README.md) contains the tested lightweight bedroom repeater for an original Raspberry Pi Zero W and a second 800 × 480 display. The main WOPR retains the SDR and network-feed work; the Zero renders a four-page, large-type client from a compact LAN data relay.
+
 ## Notes
 
 The military identification page uses publicly available ADS-B information and conservative heuristics. An unknown type receives a generic profile instead of a fabricated identification.

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Situation Mirror Preview</title>
+<style>
+  :root{--bg:#000108;--white:#eaffff;--cyan:#00eaff;--pink:#ff2faf;--violet:#8f50ff;--green:#42ffb0;--dim:#17203d;--red:#ff446f}
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:#111522;color:var(--white);font-family:Consolas,"Courier New",monospace}
+  body{display:grid;place-items:center;padding:18px;gap:12px}
+  #monitor{position:relative;width:min(800px,calc(100vw - 24px));aspect-ratio:5/3;background:var(--bg);overflow:hidden;border:1px solid #273254;box-shadow:0 16px 50px #000}
+  .page{position:absolute;inset:0;display:none;padding:13px 18px 12px}.page.active{display:block}
+  .header{height:54px;border-bottom:2px solid var(--cyan);display:flex;align-items:flex-start;justify-content:space-between}
+  .title{font-size:27px;font-weight:700;letter-spacing:1px}.title b{color:var(--pink)}
+  .sub{font-size:16px;color:var(--cyan);margin-top:2px}.online{font-size:14px;color:var(--green);margin-top:4px}
+  .footer{position:absolute;left:18px;right:18px;bottom:8px;border-top:2px solid var(--cyan);padding-top:5px;color:var(--cyan);font-size:14px;display:flex;justify-content:space-between}
+  .label{color:var(--violet);font-size:18px}.pink{color:var(--pink)}.cyan{color:var(--cyan)}.green{color:var(--green)}
+  .clockgrid{height:356px;display:grid;grid-template-columns:1.35fr 1fr;gap:12px;padding-top:12px}
+  .panel{border:1px solid var(--violet);padding:12px;position:relative;background:linear-gradient(135deg,rgba(25,8,48,.23),transparent 55%)}
+  .time{font-size:83px;line-height:1;color:var(--white);font-weight:700;letter-spacing:-5px;margin-top:21px}.date{font-size:22px;color:var(--cyan);margin-top:12px}
+  .temp{font-size:75px;line-height:1;font-weight:700;margin-top:14px}.condition{font-size:24px;color:var(--cyan);margin-top:8px}
+  .contact{font-size:51px;line-height:1;color:var(--cyan);font-weight:700;margin-top:18px}.nearest{font-size:21px;line-height:1.5;margin-top:20px}
+  .radarbody{height:356px;display:grid;grid-template-columns:1.15fr .85fr;gap:12px;padding-top:10px}
+  #scope{width:100%;height:100%;display:block}.tracklist{border-left:1px solid var(--violet);padding:8px 0 0 14px}.tracklist h2{font-size:25px;color:var(--cyan);margin:0 0 12px}.track{padding:10px 0;border-bottom:1px solid var(--dim);font-size:18px}.track b{color:var(--white);font-size:22px}.track span{float:right;color:var(--green)}
+  .forecast{height:360px;display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding-top:13px}.day{border:1px solid var(--violet);padding:10px}.dayname{font-size:24px;font-weight:700}.day:nth-child(1) .dayname,.day:nth-child(3) .rain{color:var(--pink)}.date2{font-size:14px;color:var(--violet);margin-top:3px}.hi{font-size:43px;font-weight:700;margin-top:21px}.lo{font-size:23px;color:var(--cyan);margin-top:12px}.wx{font-size:15px;color:var(--green);margin-top:25px}.rain{font-size:19px;color:var(--violet);margin-top:24px}
+  .news{height:354px;padding-top:8px}.story{height:143px;border-bottom:1px solid var(--dim);padding:5px 4px}.story .type{font-size:17px;color:var(--pink)}.story .headline{font-size:31px;line-height:1.18;font-weight:700;margin-top:7px}.markets{font-size:20px;padding:9px 4px;color:var(--green);display:flex;justify-content:space-between}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.controls button{font:15px Consolas,monospace;color:#eaffff;background:#22283a;border:1px solid #4a5576;padding:8px 12px}.controls button.active{background:#00a7b8;color:#001014;border-color:#00eaff}
+  @media(max-width:650px){.title{font-size:19px}.sub{font-size:11px}.time{font-size:50px}.temp{font-size:46px}.contact{font-size:34px}.story .headline{font-size:20px}.forecast{gap:3px}.day{padding:5px}.dayname{font-size:17px}.hi{font-size:28px}.lo{font-size:15px}}
+</style>
+</head>
+<body>
+<main id="monitor" aria-label="800 by 480 Situation Monitor bedroom mirror preview">
+  <section class="page active" data-page="0">
+    <header class="header"><div><div class="title"><b>▌</b> SITUATION MIRROR</div><div class="sub">BEDROOM STATUS / LIVE FROM WOPR</div></div><div class="online">● LINKED</div></header>
+    <div class="clockgrid">
+      <div class="panel"><div class="label">LOCAL TIME</div><div class="time" id="clock">10:42</div><div class="date" id="date">SAT NOV 07</div><div class="nearest"><span class="label">NEAREST AIRCRAFT</span><br><b>N421KT</b> &nbsp; 15.5 NM / 28.7 KM</div></div>
+      <div style="display:grid;grid-template-rows:1fr 1fr;gap:12px"><div class="panel"><div class="label">OUTSIDE / NORMAN</div><div class="temp">63°</div><div class="condition">CLEAR</div></div><div class="panel"><div class="label">AIRSPACE / 50 NM</div><div class="contact">5 CONTACTS</div><div class="condition green">MODERATE</div></div></div>
+    </div><div class="footer"><span>&gt; MAIN RECEIVER ONLINE</span><span>PAGE 1 / 4</span></div>
+  </section>
+  <section class="page" data-page="1">
+    <header class="header"><div><div class="title"><b>▌</b> LIVE AIRSPACE</div><div class="sub">50 NM / 93 KM ADS-B MIRROR</div></div><div class="online">● READSB LINK</div></header>
+    <div class="radarbody"><canvas id="scope" width="440" height="346"></canvas><div class="tracklist"><h2>NEAREST TRACKS</h2><div class="track"><b>N421KT</b><span>15.5 NM</span><br>7,200 FT · 148 KT</div><div class="track"><b class="pink">MIL RCH445</b><span>23.1 NM</span><br>18,400 FT · 312 KT</div><div class="track"><b>SWA221</b><span>31.8 NM</span><br>24,100 FT · 386 KT</div><div class="track"><b>UAL903</b><span>42.6 NM</span><br>31,000 FT · 421 KT</div></div></div>
+    <div class="footer"><span>&gt; POSITIONS FROM MAIN WOPR</span><span>PAGE 2 / 4</span></div>
+  </section>
+  <section class="page" data-page="2">
+    <header class="header"><div><div class="title"><b>▌</b> FIVE DAY OUTLOOK</div><div class="sub">NORMAN / BEDROOM READABILITY MODE</div></div><div class="online">● UPDATED 10:40</div></header>
+    <div class="forecast"><div class="day"><div class="dayname">SAT</div><div class="date2">NOV 07</div><div class="hi">72°</div><div class="lo">LOW 51°</div><div class="wx">PART CLOUD</div><div class="rain">RAIN 10%</div></div><div class="day"><div class="dayname">SUN</div><div class="date2">NOV 08</div><div class="hi">68°</div><div class="lo">LOW 47°</div><div class="wx">STORMS</div><div class="rain pink">RAIN 70%</div></div><div class="day"><div class="dayname">MON</div><div class="date2">NOV 09</div><div class="hi">59°</div><div class="lo">LOW 41°</div><div class="wx">RAIN</div><div class="rain">RAIN 55%</div></div><div class="day"><div class="dayname">TUE</div><div class="date2">NOV 10</div><div class="hi">57°</div><div class="lo">LOW 38°</div><div class="wx">CLOUDY</div><div class="rain">RAIN 15%</div></div><div class="day"><div class="dayname">WED</div><div class="date2">NOV 11</div><div class="hi">63°</div><div class="lo">LOW 42°</div><div class="wx">CLEAR</div><div class="rain">RAIN 5%</div></div></div>
+    <div class="footer"><span>&gt; FORECAST RELAY</span><span>PAGE 3 / 4</span></div>
+  </section>
+  <section class="page" data-page="3">
+    <header class="header"><div><div class="title"><b>▌</b> INTELLIGENCE</div><div class="sub">LARGE-TYPE BEDROOM EDITION</div></div><div class="online">● FEEDS CURRENT</div></header>
+    <div class="news"><article class="story"><div class="type">01 / NATIONAL</div><div class="headline">MAJOR INFRASTRUCTURE PLAN ADVANCES AFTER LATE VOTE</div></article><article class="story"><div class="type">02 / TECHNOLOGY</div><div class="headline">NEW CHIP DESIGN PROMISES FASTER LOW-POWER COMPUTING</div></article><div class="markets"><span>DJIA ▲ +0.42%</span><span>S&amp;P ▲ +0.31%</span><span class="pink">NASDAQ ▼ -0.18%</span></div></div>
+    <div class="footer"><span>&gt; HEADLINES FROM MAIN WOPR</span><span>PAGE 4 / 4</span></div>
+  </section>
+</main>
+<nav class="controls" aria-label="Preview controls"><button data-go="0" class="active">Status</button><button data-go="1">Radar</button><button data-go="2">5-Day</button><button data-go="3">News</button><button id="auto">Auto rotation: ON</button></nav>
+<script>
+  const pages=[...document.querySelectorAll('.page')], buttons=[...document.querySelectorAll('[data-go]')]; let current=0, automatic=true, last=Date.now();
+  function show(n){current=n;pages.forEach((p,i)=>p.classList.toggle('active',i===n));buttons.forEach((b,i)=>b.classList.toggle('active',i===n));last=Date.now()}
+  buttons.forEach(b=>b.onclick=()=>show(+b.dataset.go));document.getElementById('auto').onclick=e=>{automatic=!automatic;e.target.textContent='Auto rotation: '+(automatic?'ON':'OFF');last=Date.now()};
+  setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});document.getElementById('date').textContent=d.toLocaleDateString([],{weekday:'short',month:'short',day:'2-digit'}).toUpperCase();if(automatic&&Date.now()-last>7000)show((current+1)%pages.length)},250);
+  const c=document.getElementById('scope'),x=c.getContext('2d');let a=0;const dots=[[.18,-.1,'N421KT',false],[.38,-1.8,'SWA221',false],[.56,-2.6,'UAL903',false],[.47,2.9,'RCH445',true],[.75,.8,'AAL1842',false]];
+  function radar(){x.fillStyle='#000108';x.fillRect(0,0,c.width,c.height);const cx=210,cy=173,r=150;x.strokeStyle='#8f50ff';x.lineWidth=1;for(let q=1;q<=4;q++){x.beginPath();x.arc(cx,cy,r*q/4,0,Math.PI*2);x.stroke()}x.beginPath();x.moveTo(cx-r,cy);x.lineTo(cx+r,cy);x.moveTo(cx,cy-r);x.lineTo(cx,cy+r);x.stroke();a+=.018;x.strokeStyle='#00eaff';x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.sin(a)*r,cy-Math.cos(a)*r);x.stroke();dots.forEach(d=>{const px=cx+Math.sin(d[1])*d[0]*r,py=cy-Math.cos(d[1])*d[0]*r;x.fillStyle=d[3]?'#ff2faf':'#eaffff';x.beginPath();x.arc(px,py,d[3]?5:4,0,7);x.fill();x.font='14px Consolas';x.fillText(d[2],px+7,py+4)});requestAnimationFrame(radar)}radar();
+</script>
+</body>
+</html>
